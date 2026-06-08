@@ -1,0 +1,950 @@
+<html><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Urlaubsplaner</title>
+    <!-- <style>
+        .hidden {
+            display: none;
+        }
+        button {
+            margin: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+        .active {
+            background-color: #007BFF;
+            color: white;
+        }
+        main {
+            margin: auto;
+            max-width: 600px;
+        }
+        #hotel-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+#hotel-modal.hidden {
+    display: none;
+}
+#poi-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+#poi-modal.hidden {
+    display: none;
+}
+    </style> -->
+<style>
+    :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf7;
+    --primary: #a0784a;
+    --primary-hover: #8a6338;
+    --text: #3b2f1e;
+    --text-light: #7a6652;
+    --border: #d9cfc0;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 16px;
+}
+
+nav {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    box-shadow: var(--shadow);
+}
+
+nav button {
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 18px;
+    font-size: 15px;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+nav button:hover {
+    background: var(--bg);
+    color: var(--text);
+}
+
+nav button.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+main {
+    max-width: 640px;
+    margin: 24px auto;
+    padding: 0 16px;
+}
+
+section h2 {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text);
+}
+
+section p {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 16px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+#hotel-modal.hidden, #poi-modal.hidden {
+    display: none !important;
+}
+thead {
+    background: var(--primary);
+    color: white;
+}
+thead tr:first-child th:first-child {
+    border-radius: var(--radius) 0 0 0;
+}
+thead tr:first-child th:last-child {
+    border-radius: 0 var(--radius) 0 0;
+}
+th {
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    vertical-align: middle;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover td {
+    background: #f5f0e8;
+}
+
+button {
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 14px;
+    padding: 8px 16px;
+    border: none;
+    transition: background 0.15s;
+}
+
+/* Add buttons */
+#hotel-add, #poi-add {
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+    font-size: 15px;
+}
+
+#hotel-add:hover, #poi-add:hover {
+    background: var(--primary-hover);
+}
+
+/* Action buttons in table */
+.delete-btn, .edit-btn, .up-btn, .down-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-light);
+    padding: 4px 8px;
+    font-size: 14px;
+    margin: 1px;
+}
+
+.delete-btn:hover { background: #f5e0d0; color: #a03020; }
+.edit-btn:hover { background: #e8f0e0; color: #4a7a30; }
+.up-btn:hover, .down-btn:hover { background: var(--bg); color: var(--text); }
+
+/* Modal */
+#hotel-modal, #poi-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+.hidden {
+    display: none !important;
+}
+.modal-content {
+    background: var(--surface);
+    padding: 24px;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.modal-content h3 {
+    font-size: 17px;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.modal-content input,
+.modal-content select,
+.modal-content textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: inherit;
+}
+
+.modal-content input:focus,
+.modal-content select:focus,
+.modal-content textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+#hotel-save, #poi-save {
+    background: var(--primary);
+    color: white;
+}
+
+#hotel-save:hover, #poi-save:hover {
+    background: var(--primary-hover);
+}
+
+#hotel-cancel, #poi-cancel {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text-light);
+}
+
+#hotel-cancel:hover, #poi-cancel:hover {
+    background: var(--bg);
+}
+
+/* Notes */
+#notes {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 15px;
+    resize: vertical;
+    box-shadow: var(--shadow);
+}
+
+#notes-save {
+    margin-top: 10px;
+    background: var(--primary);
+    color: white;
+    padding: 10px 20px;
+}
+
+#notes-save:hover {
+    background: var(--primary-hover);
+}
+#trip-header {
+    background: var(--surface);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+#trip-title {
+    font-size: 20px;
+    font-weight: 600;
+    border: none;
+    background: none;
+    color: var(--text);
+    width: 100%;
+    font-family: inherit;
+}
+
+#trip-title:focus {
+    outline: none;
+    border-bottom: 2px solid var(--primary);
+}
+
+#poi-filter {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 15px;
+    background: var(--surface);
+    color: var(--text);
+    font-family: inherit;
+    margin-bottom: 12px;
+}
+#trip-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+td a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+td a:hover {
+    text-decoration: underline;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #2a2218;
+        --surface: #332d22;
+        --primary: #c49a6c;
+        --primary-hover: #b08050;
+        --text: #f0e8d8;
+        --text-light: #a89880;
+        --border: #4a4030;
+    }
+}
+
+</style>  
+</head>
+<body>
+<nav>
+    <button class="active" data-target="hotels">Hotels</button>
+    <button data-target="interessantes">Interessantes</button>
+    <button data-target="notizen">Notizen</button>
+</nav>
+<div id="trip-header">
+    <input type="text" id="trip-title" placeholder="Urlaubsname...">
+    <button id="export-btn">⬇ Exportieren</button>
+</div>
+<main>
+    <section id="hotels">
+        <h2>Hotels</h2>
+        <p>Hier können Sie Ihre bevorzugten Hotels hinzufügen und verwalten.</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Datum</th>
+                    <th>Ort</th>
+                    <th>Hotel</th>
+                    <th>Adresse</th>
+                    <th>Aktionen</th>
+                </tr>
+            </thead>
+            <tbody id="hotels-body">
+                <tr class="empty-row" style="display: none;"><td colspan="5" style="text-align:center; color: var(--text-light); padding: 20px;">Keine Einträge</td></tr>
+
+                <tr>
+          
+          <td>24.09.2026 – 27.09.2026</td>
+          <td>Halifax</td>
+          <td>Sandman Signature</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=973%20Wilkinson%20Ave%2C%20B3B0M9%20Halifax" target="_blank">973 Wilkinson Ave, B3B0M9 Halifax</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>28.09.2026 – 28.09.2026</td>
+          <td>Cape Breton</td>
+          <td>Maritime Inn PH</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=717%20Reeves%20Street%20B9A%20252%20Port%20Hawksbury" target="_blank">717 Reeves Street B9A 252 Port Hawksbury</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>29.09.2026 – 29.09.2026</td>
+          <td>Cape Breton</td>
+          <td>The Islands Inn</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=37706%20Cabot%20Trail%20BOC140%20Ingouish%20Beach" target="_blank">37706 Cabot Trail BOC140 Ingouish Beach</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>30.09.2026 – 30.09.2026</td>
+          <td>Cape Breton</td>
+          <td>Hampton Inn Sydney</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=60%20Maillard%20Street%20B1S1H0%20Sydney" target="_blank">60 Maillard Street B1S1H0 Sydney</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>01.10.2026 – 01.10.2026</td>
+          <td>Cape Breton</td>
+          <td>Maritime Inn PH</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=717%20Reeves%20Street%20B9A252%20Port%20Hawksbury" target="_blank">717 Reeves Street B9A252 Port Hawksbury</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>02.10.2026 – 04.10.2026</td>
+          <td>Prince Edward</td>
+          <td>Hampton Inn &amp; Suites</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=300%20Capital%20Drive%20PEC1E%20Charlottetown" target="_blank">300 Capital Drive PEC1E Charlottetown</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr><tr>
+          
+          <td>05.10.2026 – 07.10.2026</td>
+          <td>Halifax</td>
+          <td>Sandman Signature</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&amp;query=973%20Wilkonson%20Ave%20B3b0M9%20Halifax" target="_blank">973 Wilkonson Ave B3b0M9 Halifax</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        </tr></tbody>    
+        </table>
+        <button id="hotel-add">+ Hotel hinzufügen</button>
+        </section>  
+    <section id="interessantes" class="hidden">
+        <h2>Interessantes</h2>
+<select id="poi-filter"><option value="">Alle Orte</option></select>
+        <table>
+            <thead>
+            <tr>
+                <th>Ort</th>
+                <th>Adresse</th>
+                <th>Innen/Außen</th>
+                <th>Beschreibung</th>
+                <th>Aktionen</th>
+            </tr>
+            </thead>
+            <tbody id="poi-body">
+                                <tr class="empty-row"><td colspan="5" style="text-align:center; color: var(--text-light); padding: 20px;">Keine Einträge</td></tr>
+
+                </tbody>
+                </table>
+        <button id="poi-add">+ Interessantes hinzufügen</button>
+    </section>
+    <section id="notizen" class="hidden">
+        <h2>Notizen</h2>
+        <p>Hier können Sie wichtige Notizen und Informationen für Ihren Urlaub hinzufügen und verwalten.</p>
+        <textarea id="notes" rows="10" cols="50" placeholder="Ihre Notizen hier..."></textarea>
+        <br><button id="notes-save">Notizen speichern</button>
+    </section>
+    
+</main>
+
+<div id="hotel-modal" class="hidden">
+  <div class="modal-content">
+    <h3>Hotel hinzufügen</h3>
+    <input type="date" id="hotel-von" placeholder="Von">
+    <input type="date" id="hotel-bis" placeholder="Bis">    
+    <input type="text" id="hotel-ort" placeholder="Ort">
+    <input type="text" id="hotel-name" placeholder="Hotel">
+    <input type="text" id="hotel-adresse" placeholder="Adresse">
+    <button id="hotel-save">Speichern</button>
+    <button id="hotel-cancel">Abbrechen</button>
+  </div>
+</div>
+<div id="poi-modal" class="hidden">
+  <div class="modal-content">
+    <h3>Interessantes hinzufügen</h3>
+    <input type="text" id="poi-ort" placeholder="Ort">
+    <input type="text" id="poi-adresse" placeholder="Adresse">
+    <select id="poi-innen-aussen">
+        <option value="Innen">Innen</option>
+        <option value="Außen">Außen</option>
+    </select>
+    <textarea id="poi-beschreibung" rows="4" cols="50" placeholder="Beschreibung"></textarea>
+    <button id="poi-save">Speichern</button>
+    <button id="poi-cancel">Abbrechen</button>
+  </div>
+  </div>
+<script>
+let editingRow = null;
+let editingPoiRow = null
+
+function moveRow(tr, direction, saveFn) {
+    if (direction === 'up' && tr.previousElementSibling) {
+        tr.parentNode.insertBefore(tr, tr.previousElementSibling);
+    } else if (direction === 'down' && tr.nextElementSibling) {
+        tr.parentNode.insertBefore(tr.nextElementSibling, tr);
+    }
+    saveFn();
+}
+function updateEmptyRow(tbodyId) {
+    const tbody = document.getElementById(tbodyId);
+    const emptyRow = tbody.querySelector('.empty-row');
+    const realRows = tbody.querySelectorAll('tr:not(.empty-row)');
+    if (emptyRow) {
+        emptyRow.style.display = realRows.length > 0 ? 'none' : 'table-row';
+    }
+}
+function updatePoiFilter() {
+    const filter = document.getElementById('poi-filter');
+    const current = filter.value;
+    const orte = new Set();
+    document.querySelectorAll('#poi-body tr:not(.empty-row)').forEach(tr => {
+        orte.add(tr.cells[0].textContent.trim());
+    });
+    filter.innerHTML = '<option value="">Alle Orte</option>';
+    orte.forEach(ort => {
+        const opt = document.createElement('option');
+        opt.value = ort;
+        opt.textContent = ort;
+        filter.appendChild(opt);
+    });
+    filter.value = orte.has(current) ? current : '';
+}
+
+function filterPois() {
+    const query = document.getElementById('poi-filter').value;
+    document.querySelectorAll('#poi-body tr:not(.empty-row)').forEach(tr => {
+        tr.style.display = !query || tr.cells[0].textContent.trim() === query ? '' : 'none';
+    });
+}
+const buttons = document.querySelectorAll('nav > button');
+const sections = document.querySelectorAll('main section');
+
+
+buttons.forEach(button => {
+    button.addEventListener('click', () => {
+        const targetId = button.dataset.target;
+
+        // remove active from all buttons
+        buttons.forEach(btn => btn.classList.remove('active'));
+        // add hidden to all sections
+        sections.forEach(section => section.classList.add('hidden'));
+        // add active to this button
+        button.classList.add('active');
+        // remove hidden from document.getElementById(targetId)
+        document.getElementById(targetId).classList.remove('hidden');
+    });
+});
+
+document.getElementById('hotel-add').addEventListener('click', () => {
+    document.getElementById('hotel-modal').classList.remove('hidden');
+    console.log('hotel-add clicked');
+});
+document.getElementById('hotel-save').addEventListener('click', (e) => {
+    const von = document.getElementById('hotel-von').value;
+    const bis = document.getElementById('hotel-bis').value;
+    const ort = document.getElementById('hotel-ort').value;
+    const name = document.getElementById('hotel-name').value;
+    const adresse = document.getElementById('hotel-adresse').value;
+    if (!von || !bis || !ort || !name || !adresse) {
+    alert('Bitte alle Felder ausfüllen.');
+    return;
+}
+    if (editingRow) {
+        editingRow.cells[0].textContent = `${formatDate(von)} – ${formatDate(bis)}`;
+        editingRow.cells[1].textContent = ort;
+        editingRow.cells[2].textContent = name;
+        editingRow.cells[3].textContent = adresse;
+        editingRow = null;
+        saveHotels();
+    } else {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${formatDate(von)} – ${formatDate(bis)}</td>
+          <td>${ort}</td>
+          <td>${name}</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(adresse)}" target="_blank">${adresse}</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        `;
+        tr.querySelector('.delete-btn').addEventListener('click', () => {
+            if (!confirm('Eintrag wirklich löschen?')) return;
+            tr.remove();
+            saveHotels();
+            updateEmptyRow('hotels-body');
+        });
+        tr.querySelector('.edit-btn').addEventListener('click', () => {
+            editingRow = tr;
+            const [vonStr, bisStr] = tr.cells[0].textContent.split(' – ');
+            document.getElementById('hotel-von').value = vonStr.split('.').reverse().join('-');
+            document.getElementById('hotel-bis').value = bisStr.split('.').reverse().join('-');
+            document.getElementById('hotel-ort').value = tr.cells[1].textContent;
+            document.getElementById('hotel-name').value = tr.cells[2].textContent;
+            document.getElementById('hotel-adresse').value = tr.cells[3].textContent;
+            document.getElementById('hotel-modal').classList.remove('hidden');
+        });
+        tr.querySelector('.up-btn').addEventListener('click', () => moveRow(tr, 'up', saveHotels));
+        tr.querySelector('.down-btn').addEventListener('click', () => moveRow(tr, 'down', saveHotels));
+        document.getElementById('hotels-body').appendChild(tr);
+        updateEmptyRow('hotels-body');
+        saveHotels();
+        document.getElementById('hotel-von').value = '';
+        document.getElementById('hotel-bis').value = '';
+        document.getElementById('hotel-ort').value = '';
+        document.getElementById('hotel-name').value = '';
+        document.getElementById('hotel-adresse').value = '';
+    }
+
+    console.log('about to hide');
+    document.getElementById('hotel-modal').classList.add('hidden');
+    console.log('class list:', document.getElementById('hotel-modal').classList);
+});
+
+document.getElementById('hotel-cancel').addEventListener('click', () => {
+    document.getElementById('hotel-modal').classList.add('hidden');
+    document.getElementById('hotel-von').value = '';
+    document.getElementById('hotel-bis').value = '';
+    document.getElementById('hotel-ort').value = '';
+    document.getElementById('hotel-name').value = '';
+    document.getElementById('hotel-adresse').value = '';
+    editingRow = null;
+});
+
+document.getElementById('poi-add').addEventListener('click', () => {
+    document.getElementById('poi-modal').classList.remove('hidden');
+});
+document.getElementById('poi-save').addEventListener('click', () => {
+    const ort = document.getElementById('poi-ort').value;
+    const innenAussen = document.getElementById('poi-innen-aussen').value;
+    const beschreibung = document.getElementById('poi-beschreibung').value;
+    const adresse = document.getElementById('poi-adresse').value;
+    if (!ort || !adresse) {
+        alert('Bitte alle Felder ausfüllen.');
+        return;
+    }
+    if (editingPoiRow) {
+        editingPoiRow.cells[0].textContent = ort;
+        editingPoiRow.cells[2].textContent = innenAussen;
+        editingPoiRow.cells[3].textContent = beschreibung;
+        editingPoiRow.cells[1].textContent = adresse;
+        editingPoiRow = null;
+        savePois();
+    } else {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${ort}</td><td><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(adresse)}" target="_blank">${adresse}</a></td>
+<td>${innenAussen}</td><td>${beschreibung}</td>
+      <td>
+        <button class="delete-btn">🗑</button>
+        <button class="edit-btn">✏️</button>
+        <button class="up-btn">⬆</button>
+        <button class="down-btn">⬇</button>
+      </td>
+    `;
+    tr.querySelector('.delete-btn').addEventListener('click', () => {
+        if (!confirm('Eintrag wirklich löschen?')) return;
+
+        tr.remove();
+        savePois();
+        updateEmptyRow('poi-body');
+    });
+    tr.querySelector('.edit-btn').addEventListener('click', () => {
+        editingPoiRow = tr;
+        document.getElementById('poi-ort').value = tr.cells[0].textContent;
+        document.getElementById('poi-innen-aussen').value = tr.cells[2].textContent;
+        document.getElementById('poi-beschreibung').value = tr.cells[3].textContent;
+        document.getElementById('poi-adresse').value = tr.cells[1].textContent;
+        document.getElementById('poi-modal').classList.remove('hidden');
+    });
+    tr.querySelector('.up-btn').addEventListener('click', () => moveRow(tr, 'up', savePois));
+    tr.querySelector('.down-btn').addEventListener('click', () => moveRow(tr, 'down', savePois));
+
+    document.getElementById('poi-body').appendChild(tr);
+    updateEmptyRow('poi-body');
+    }
+    document.getElementById('poi-modal').classList.add('hidden');
+
+        savePois();
+    document.getElementById('poi-ort').value = '';
+    document.getElementById('poi-innen-aussen').value = '';
+    document.getElementById('poi-beschreibung').value = '';
+    document.getElementById('poi-adresse').value = '';
+    editingPoiRow = null;
+});
+ document.getElementById('poi-cancel').addEventListener('click', () => {
+    document.getElementById('poi-modal').classList.add('hidden');  
+    document.getElementById('poi-ort').value = '';
+    document.getElementById('poi-innen-aussen').value = '';
+    document.getElementById('poi-beschreibung').value = '';
+    document.getElementById('poi-adresse').value = '';
+    editingPoiRow = null;
+    });
+document.getElementById('poi-filter').addEventListener('change', filterPois);
+
+    document.getElementById('notes-save').addEventListener('click', saveNotes);
+
+
+
+
+// Saving logic
+
+function saveHotels() {
+    const rows = [];
+    document.querySelectorAll('#hotels-body tr:not(.empty-row)').forEach(tr => {
+        rows.push({
+            von: tr.cells[0].textContent.split(' – ')[0],
+            bis: tr.cells[0].textContent.split(' – ')[1],
+            ort: tr.cells[1].textContent,
+            name: tr.cells[2].textContent,
+            adresse: tr.cells[3].textContent
+});
+    });
+    localStorage.setItem('hotels', JSON.stringify(rows));
+};
+function loadHotels(){
+    const hotels = JSON.parse(localStorage.getItem('hotels') || '[]');
+    hotels.forEach(hotel => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          
+          <td>${hotel.von} – ${hotel.bis}</td>
+          <td>${hotel.ort}</td>
+          <td>${hotel.name}</td>
+          <td><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(hotel.adresse)}" target="_blank">${hotel.adresse}</a></td>
+
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        `;
+        tr.querySelector('.delete-btn').addEventListener('click', () => {
+            if (!confirm('Eintrag wirklich löschen?')) return;
+            tr.remove();
+            saveHotels();
+            updateEmptyRow('hotels-body');
+        });
+        tr.querySelector('.edit-btn').addEventListener('click', () => {
+            editingRow = tr;
+           document.getElementById('hotel-von').value = hotel.von.split('.').reverse().join('-');
+document.getElementById('hotel-bis').value = hotel.bis.split('.').reverse().join('-');
+            document.getElementById('hotel-ort').value = hotel.ort;
+            document.getElementById('hotel-name').value = hotel.name;
+            document.getElementById('hotel-adresse').value = hotel.adresse;
+            document.getElementById('hotel-modal').classList.remove('hidden');
+        });
+        tr.querySelector('.up-btn').addEventListener('click', () => moveRow(tr, 'up', saveHotels));
+        tr.querySelector('.down-btn').addEventListener('click', () => moveRow(tr, 'down', saveHotels));
+        document.getElementById('hotels-body').appendChild(tr);
+        updateEmptyRow('hotels-body');
+    });
+};
+
+function savePois() {
+    const rows = [];
+    document.querySelectorAll('#poi-body tr:not(.empty-row)').forEach(tr => {
+        rows.push({
+            ort: tr.cells[0].textContent,
+            adresse: tr.cells[1].textContent,
+            innenAussen: tr.cells[2].textContent,
+            beschreibung: tr.cells[3].textContent
+        });
+    });
+    localStorage.setItem('pois', JSON.stringify(rows));
+    updatePoiFilter() 
+};
+
+function loadPois() {
+    const pois = JSON.parse(localStorage.getItem('pois') || '[]');
+    pois.forEach(poi => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${poi.ort}</td><td><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(poi.adresse)}" target="_blank">${poi.adresse}</a></td>
+<td>${poi.innenAussen}</td><td>${poi.beschreibung}</td>
+          <td>
+            <button class="delete-btn">🗑</button>
+            <button class="edit-btn">✏️</button>
+            <button class="up-btn">⬆</button>
+            <button class="down-btn">⬇</button>
+          </td>
+        `;
+        tr.querySelector('.delete-btn').addEventListener('click', () => {
+            if (!confirm('Eintrag wirklich löschen?')) return;
+            tr.remove();
+            savePois();
+            updateEmptyRow('poi-body');
+        });
+        tr.querySelector('.edit-btn').addEventListener('click', () => {
+            editingPoiRow = tr;
+            document.getElementById('poi-ort').value = tr.cells[0].textContent;
+            document.getElementById('poi-adresse').value = tr.cells[1].textContent;
+            document.getElementById('poi-innen-aussen').value = tr.cells[2].textContent;
+            document.getElementById('poi-beschreibung').value = tr.cells[3].textContent;
+            document.getElementById('poi-modal').classList.remove('hidden');
+        });
+        tr.querySelector('.up-btn').addEventListener('click', () => moveRow(tr, 'up', savePois));
+        tr.querySelector('.down-btn').addEventListener('click', () => moveRow(tr, 'down', savePois));
+        document.getElementById('poi-body').appendChild(tr);
+        updateEmptyRow('poi-body');
+    });
+    updatePoiFilter() 
+};
+
+function saveNotes() {
+    const notes = document.getElementById('notes').value;
+    localStorage.setItem('notes', notes);
+};
+function loadNotes() {
+    const notes = localStorage.getItem('notes') || '';
+    document.getElementById('notes').value = notes;
+};
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}.${month}.${year}`;
+}
+document.getElementById('trip-title').addEventListener('input', () => {
+    localStorage.setItem('tripTitle', document.getElementById('trip-title').value);
+});
+function exportApp() {
+    const hotels = localStorage.getItem('hotels') || '[]';
+    const pois = localStorage.getItem('pois') || '[]';
+    const notes = localStorage.getItem('notes') || '';
+    const title = localStorage.getItem('tripTitle') || '';
+
+    const html = document.documentElement.outerHTML
+        .replace('
+            localStorage.setItem('hotels', '[{"von":"24.09.2026","bis":"27.09.2026","ort":"Halifax","name":"Sandman Signature","adresse":"973 Wilkinson Ave, B3B0M9 Halifax"},{"von":"28.09.2026","bis":"28.09.2026","ort":"Cape Breton","name":"Maritime Inn PH","adresse":"717 Reeves Street B9A 252 Port Hawksbury"},{"von":"29.09.2026","bis":"29.09.2026","ort":"Cape Breton","name":"The Islands Inn","adresse":"37706 Cabot Trail BOC140 Ingouish Beach"},{"von":"30.09.2026","bis":"30.09.2026","ort":"Cape Breton","name":"Hampton Inn Sydney","adresse":"60 Maillard Street B1S1H0 Sydney"},{"von":"01.10.2026","bis":"01.10.2026","ort":"Cape Breton","name":"Maritime Inn PH","adresse":"717 Reeves Street B9A252 Port Hawksbury"},{"von":"02.10.2026","bis":"04.10.2026","ort":"Prince Edward","name":"Hampton Inn & Suites","adresse":"300 Capital Drive PEC1E Charlottetown"},{"von":"05.10.2026","bis":"07.10.2026","ort":"Halifax","name":"Sandman Signature","adresse":"973 Wilkonson Ave B3b0M9 Halifax"}]');
+            localStorage.setItem('pois', '[]');
+            localStorage.setItem('notes', 'qdweiufgweuzfg we');
+            localStorage.setItem('tripTitle', 'Kanada');
+            loadHotels();
+        ', `
+            localStorage.setItem('hotels', '${hotels.replace(/'/g, "\\'")}');
+            localStorage.setItem('pois', '${pois.replace(/'/g, "\\'")}');
+            localStorage.setItem('notes', '${notes.replace(/'/g, "\\'")}');
+            localStorage.setItem('tripTitle', '${title.replace(/'/g, "\\'")}');
+            loadHotels();
+        `);
+
+    const blob = new Blob([html], { type: 'text/html' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (title || 'urlaubsplaner') + '.html';
+    a.click();
+}
+document.getElementById('export-btn').addEventListener('click', exportApp);
+
+loadHotels();
+loadPois();
+loadNotes();
+document.getElementById('trip-title').value = localStorage.getItem('tripTitle') || '';
+
+</script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+
+</body></html>
